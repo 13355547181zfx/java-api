@@ -1,0 +1,86 @@
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.URL;
+import java.util.Random;
+
+public class Main{
+    public static String[] all;
+    public static int pos = 0;
+
+    public static void main(String[] args) throws Exception {
+        getData();
+        JFrame myframe = new JFrame("每日笑话");//窗体名称
+        myframe.setSize(500, 500);//窗体大小
+        myframe.add(new Mypanel());//创建容器
+        myframe.setVisible(true);//显示/隐藏GUI组件
+
+    }
+
+    static class Mypanel extends JLayeredPane {
+        JTextArea textArea;
+
+        //容器初始化
+        public Mypanel() {
+            JButton btn = new JButton("next");    //添加按钮
+            btn.setBounds(200, 400, 80, 30);//设置按钮大小
+            btn.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {    //翻页
+                    if (pos == all.length - 1) {  //最后一页
+                        textArea.setText("还看类，已经没了，下次再来吧");
+                    } else {
+                        pos++;
+                        textArea.setText(huanhang(all[pos]));
+                    }
+                }
+            });
+            add(btn);
+            textArea = new JTextArea();//添加文本
+            textArea.setText(huanhang(all[pos]));//
+            textArea.setFont(new Font("楷体", 0, 25));//设置文本类型
+            textArea.setBounds(35, 30, 400, 370);//设置文本大小
+            add(textArea);
+        }
+
+        public String huanhang(String line) {//给文本进行换行
+            StringBuilder str = new StringBuilder();
+            char[] arr = line.toCharArray();
+            for (int i = 0; i < arr.length; i++) {
+                str.append(arr[i]);
+                if (i % 15 == 0 && i != 0) {
+                    str.append("\n");
+                }
+            }
+            return str.toString();
+        }
+    }
+
+    public static void getData() throws Exception {
+        Random r = new Random();
+        int num = r.nextInt(100)+1;
+        URL url = new URL("https://www.mxnzp.com/api/jokes/list?page="+num+"&app_id=rgihdrm0kslojqvm&app_secret=WnhrK251TWlUUThqaVFWbG5OeGQwdz09");
+        InputStream is = url.openStream();
+        BufferedReader br = new BufferedReader(new InputStreamReader(is));
+        String content = br.readLine();
+        JSONObject jsonObject = JSONObject.fromObject(content);
+        jsonObject = jsonObject.getJSONObject("data");
+        JSONArray jsonArray = jsonObject.getJSONArray("list");
+        int size = jsonArray.size();
+        all = new String[size];
+        for (int i = 0; i < size; i++) {
+            JSONObject obj = jsonArray.getJSONObject(i);
+            String ans = obj.getString("content");
+            all[i] = ans;
+        }
+        for (int i = 0; i < 5; i++)
+            System.out.println(all[i]);
+    }
+}
